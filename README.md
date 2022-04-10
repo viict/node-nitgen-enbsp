@@ -1,31 +1,60 @@
-# NBioBSP Module for Nodejs
+# NITGEN ENBSP Module for Nodejs
 
-Digital fingerprint reader module for Python using Nitgen device.
-Install the driver that is the "driver" directory.
+Digital fingerprint reader module for NodeJS using a Nitgen device.
 
-PS: I used the versions 0.12.5 and 0.10.25.
+Currently tested on Windows with NodeJS 16 (x86), Python 3.10 (x86) and VS 2019 (x64/x86)
+
+Based on the awesome work from [Paulo Roberto](https://github.com/xxpauloxx/nodejs-nbiobsp)
+
+## Usage: as dependency
 
 ```bash
-git clone https://github.com/paulopinda/nodejs-nbiobsp.git
-cd nodejs-nbiobsp
-./setup.sh
-node test.js
+yarn add @viict/node-nitgen-enbsp
+
+```
+#### Simple code
+
+```javascript
+const enbsp = require('@viict/node-nitgen-enbsp');
+const init = enbsp.init();
+
+if(init == true){
+	console.log("Insert the first fingerprint: ");
+	const fir1 = enbsp.capture(4000);
+
+	console.log("Insert the second fingerprint: ");
+	const fir2 = enbsp.capture(4000);
+}
+
+console.log(`Match: `, enbsp.match(fir1, fir2));
+enbsp.close()
+```
+
+## Usage: cloning repo
+
+```bash
+git clone https://github.com/viict/node-nitgen-enbsp.git
+cd node-nitgen-enbsp
+yarn
+yarn test
 ```
 
 #### Simple code
 
 ```javascript
-var nbiobsp = require('./build/Release/nbiobsp');
-var init = nbiobsp.init();
+const enbsp = require('./index.js');
+const init = enbsp.init();
 
 if(init == true){
 	console.log("Insert the first fingerprint: ");
-	var fir1 = nbiobsp.capture(4000);
+	const fir1 = enbsp.capture(4000);
 
 	console.log("Insert the second fingerprint: ");
-	var fir2 = nbiobsp.capture(4000);
+	const fir2 = enbsp.capture(4000);
 }
 
-console.log(nbiobsp.match(fir1, fir2));
-nbiobsp.close()
+console.log(`Match: `, enbsp.match(fir1, fir2));
+enbsp.close()
 ```
+
+#### Any problem? Open a new issue

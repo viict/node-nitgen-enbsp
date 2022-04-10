@@ -1,15 +1,24 @@
 {
-  "name": "nbiobsp",
-  "version": "1.0.0",
-  "description": "NBioBSP module for Nodejs.",
-  "main": "test.js",
-  "private": true,
-  "scripts": {
-    "test": "node test.js"
+  "name": "@viict/node-nitgen-enbsp",
+  "version": "0.0.1",
+  "description": "NITGEN eNBSP Node Module",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/viict/node-nitgen-enbsp.git"
   },
-  "gypfile": true,
+  "keywords": ["nitgen", "node", "enbsp", "biometry", "fingerprint"],
+  "author": "Victor Moura <contato@victormoura.com>",
+  "license": "GPL",
+  "bugs": {
+    "url": "https://github.com/viict/node-nitgen-enbsp/issues"
+  },
+  "homepage": "https://github.com/viict/node-nitgen-enbsp",
+  "scripts": {
+    "test": "node test.js",
+    "install": "node-gyp-build"
+  },
   "dependencies": {
-    "bindings": "~1.2.1"
+    "node-gyp-build": "^4.4.0"
   }
 }
-

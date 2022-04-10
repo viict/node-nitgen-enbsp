@@ -1,16 +1,21 @@
 console.log(" ");
-var nbiobsp = require('./build/Release/nbiobsp');
 
-var init = nbiobsp.init();
+const nitgenBSP = require('./index.js');
+const init = nitgenBSP.init();
+// nitgenBSP.setSkin("NBSP2Jpn.dll"); // Japanese
+// nitgenBSP.setSkin("NBSP2Kor.dll"); // Korean
+// nitgenBSP.setSkin("NBSP2Por.dll"); // Portuguese
 
 if(init == true){
-	console.log("Posicione a primeira digital: ");
-	var fir1 = nbiobsp.capture(4000);
+	console.log("Enroll the fingerprints you may want: ");
+	const fir1 = nitgenBSP.capture(4000, nitgenBSP.NBioAPI_FIR_PURPOSE_ENROLL);
+	console.log(fir1);
 
-	console.log("Posicione a segunda digital: ");
-	var fir2 = nbiobsp.capture(4000);
+	console.log("Capture a new fingerprint to verify against enrolled: ");
+	const fir2 = nitgenBSP.capture(4000, nitgenBSP.NBioAPI_FIR_PURPOSE_VERIFY);
+	console.log(fir2);
 }
 
-console.log(nbiobsp.match(fir1, fir2));
-nbiobsp.close()
+console.log('Captured fingerprint compared to enrolled ones: ', nitgenBSP.match(fir1, fir2));
+nitgenBSP.close()
 
