@@ -19,3 +19,7 @@ NBioAPI_RETURN ret;
 #define SKIN_JPN (0x02)
 #define SKIN_KOR (0x03)
 #define SKIN_POR (0x04)
+
+#define ERROR_BASE_CUSTOM           (0x9000)
+// Define the skins we currently have
+#define ERROR_MISSING_ARGS (ERROR_BASE_CUSTOM + 0x01)

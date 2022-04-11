@@ -21,17 +21,15 @@ namespace NBioBSP {
 	void InitModule(const FunctionCallbackInfo<Value>& args) {
 		Isolate* isolate = args.GetIsolate();
 
-		if (NBioAPI_Init(&bspHandle) != NBioAPIERROR_NONE) {
-			args.GetReturnValue().Set(Boolean::New(isolate, false));
+		ret = NBioAPI_Init(&bspHandle);
+		if (ret != NBioAPIERROR_NONE) {
+			args.GetReturnValue().Set(Number::New(isolate, ret));
+			return;
 		}
 
 		idDevice = NBioAPI_DEVICE_ID_AUTO; // Abrindo o dispositivo para uso.
 		ret = NBioAPI_OpenDevice(bspHandle, idDevice);
-		if (ret != NBioAPIERROR_NONE) {
-			args.GetReturnValue().Set(Boolean::New(isolate, false));
-		}
-
-		args.GetReturnValue().Set(Boolean::New(isolate, true));
+		args.GetReturnValue().Set(Number::New(isolate, ret));
 	}
 
 	void SetSkin(const FunctionCallbackInfo<Value>& args) {
@@ -72,6 +70,9 @@ namespace NBioBSP {
 			v8::String::Utf8Value purposeFromArgs(isolate, args[1]);
 			std::string purposeString = std::string(*purposeFromArgs);
 			purpose = ::atof(purposeString.c_str());
+		} else {
+			args.GetReturnValue().Set(Number::New(isolate, ERROR_MISSING_ARGS));
+			return;
 		}
 
 		NBioAPI_FIR_HANDLE firHandle;
@@ -87,15 +88,16 @@ namespace NBioBSP {
 
 		// Capturar FIR da digital e retornar o hash do template.
 		NBioAPI_FIR_TEXTENCODE textFIR;
-		ret = NBioAPI_GetTextFIRFromHandle(bspHandle, firHandle, &textFIR, NBioAPI_FALSE);
+		NBioAPI_GetTextFIRFromHandle(bspHandle, firHandle, &textFIR, NBioAPI_FALSE);
 
-		if (ret == 0) {
+		if (ret == NBioAPIERROR_NONE) {
 			v8::Local<v8::String> result;
 			v8::MaybeLocal<v8::String> temp = String::NewFromUtf8(isolate, textFIR.TextFIR);
 			temp.ToLocal(&result);
 			args.GetReturnValue().Set(result);
+		} else {
+			args.GetReturnValue().Set(Number::New(isolate, ret)); 
 		}
-		else { args.GetReturnValue().Set(v8::Null(isolate)); }
 	}
 
 	// Método para fazer match de digitais.
@@ -154,17 +156,26 @@ namespace NBioBSP {
 				args.GetReturnValue().Set(Boolean::New(isolate, true));
 			}
 			else {
-				args.GetReturnValue().Set(Boolean::New(isolate, false));
+				args.GetReturnValue().Set(Number::New(isolate, ret));
 			}
 		}
 		else {
-			args.GetReturnValue().Set(Boolean::New(isolate, false));
+			args.GetReturnValue().Set(Number::New(isolate, ERROR_MISSING_ARGS));
 		}
 	}
 
 	void Close(const FunctionCallbackInfo<Value>& args) {
+		Isolate* isolate = args.GetIsolate();
 		ret = NBioAPI_CloseDevice(bspHandle, idDevice);
-		ret = NBioAPI_Terminate(bspHandle);
+		if (ret == NBioAPIERROR_NONE) {
+			ret = NBioAPI_Terminate(bspHandle);
+			if (ret == NBioAPIERROR_NONE) {
+				args.GetReturnValue().Set(Boolean::New(isolate, true));
+				return;
+			}
+		}
+
+		args.GetReturnValue().Set(Number::New(isolate, ret)); 
 	}
 
 	void init(Local<Object> exports) {
@@ -185,12 +196,108 @@ namespace NBioBSP {
 		NODE_DEFINE_CONSTANT(exports, ENROLL);
 		NODE_DEFINE_CONSTANT(exports, VERIFY);
 		NODE_DEFINE_CONSTANT(exports, IDENTIFY);
+
+		// Export all error codes from NBioAPI_Error.h
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_NONE);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INVALID_HANDLE);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INVALID_POINTER);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INVALID_TYPE);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_FUNCTION_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_STRUCTTYPE_NOT_MATCHED);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_ALREADY_PROCESSED);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_EXTRACTION_OPEN_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_VERIFICATION_OPEN_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_DATA_PROCESS_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_MUST_BE_PROCESSED_DATA);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INTERNAL_CHECKSUM_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_ENCRYPTED_DATA_ERROR);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_UNKNOWN_FORMAT);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_UNKNOWN_VERSION);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_VALIDITY_FAIL);
+
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_MAXFINGER);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_SAMPLESPERFINGER);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_ENROLLQUALITY);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_VERIFYQUALITY);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_IDENTIFYQUALITY);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_SECURITYLEVEL);
+
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INVALID_MINSIZE);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INVALID_TEMPLATE);
+
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_EXPIRED_VERSION);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INVALID_SAMPLESPERFINGER);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_UNKNOWN_INPUTFORMAT);
+
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_ENROLLSECURITYLEVEL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_NECESSARYENROLLNUM);
+		// NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_RESERVED1);
+		// NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_RESERVED2);
+		// NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_RESERVED3);
+		// NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_RESERVED4);
+		// NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_RESERVED5);
+		// NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_RESERVED6);
+		// NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_RESERVED7);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_OUT_OF_MEMORY);
+
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_DEVICE_OPEN_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INVALID_DEVICE_ID);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_WRONG_DEVICE_ID);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_DEVICE_ALREADY_OPENED);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_DEVICE_NOT_OPENED);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_DEVICE_BRIGHTNESS);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_DEVICE_CONTRAST);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_DEVICE_GAIN);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_LOWVERSION_DRIVER);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_DEVICE_INIT_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_DEVICE_LOST_DEVICE);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_DEVICE_DLL_LOAD_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_DEVICE_MAKE_INSTANCE_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_DEVICE_DLL_GET_PROC_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_DEVICE_IO_CONTROL_FAIL);
+
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_USER_CANCEL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_USER_BACK);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_CAPTURE_TIMEOUT);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_CAPTURE_FAKE_SUSPICIOUS);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_ENROLL_EVENT_PLACE);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_ENROLL_EVENT_HOLD);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_ENROLL_EVENT_REMOVE);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_ENROLL_EVENT_PLACE_AGAIN);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_ENROLL_EVENT_EXTRACT);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_ENROLL_EVENT_MATCH_FAILED);
+
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_MAXCANDIDATE);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_NSEARCH_OPEN_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_NSEARCH_INIT_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_NSEARCH_MEM_OVERFLOW);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_NSEARCH_SAVE_DB);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_NSEARCH_LOAD_DB);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_NSEARCH_INVALD_TEMPLATE);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_NSEARCH_OVER_LIMIT);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_NSEARCH_IDENTIFY_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_NSEARCH_LICENSE_LOAD);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_NSEARCH_LICENSE_KEY);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_NSEARCH_LICENSE_EXPIRED);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_NSEARCH_DUPLICATED_ID);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_NSEARCH_INVALID_ID);
+
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_IMGCONV_INVALID_PARAM);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_IMGCONV_MEMALLOC_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_IMGCONV_FILEOPEN_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_IMGCONV_FILEWRITE_FAIL);
+
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INIT_PRESEARCHRATE);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INDEXSEARCH_INIT_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INDEXSEARCH_SAVE_DB);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INDEXSEARCH_LOAD_DB);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INDEXSEARCH_UNKNOWN_VER);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INDEXSEARCH_IDENTIFY_FAIL);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INDEXSEARCH_DUPLICATED_ID);
+		NODE_DEFINE_CONSTANT(exports, NBioAPIERROR_INDEXSEARCH_IDENTIFY_STOP);
 		
-		// Export skins constants
-		// NODE_DEFINE_CONSTANT(exports, SKIN_ENG);
-		// NODE_DEFINE_CONSTANT(exports, SKIN_JPN);
-		// NODE_DEFINE_CONSTANT(exports, SKIN_KOR);
-		// NODE_DEFINE_CONSTANT(exports, SKIN_POR);
+		// Export custom error codes from nbiobsp.h
+		NODE_DEFINE_CONSTANT(exports, ERROR_MISSING_ARGS);
 	}
 
 	NODE_MODULE(NBioBSP, init)
