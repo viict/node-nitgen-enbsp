@@ -1,6 +1,6 @@
 {
   "name": "@viict/node-nitgen-enbsp",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "NITGEN eNBSP Node Module",
   "main": "index.js",
   "repository": {
