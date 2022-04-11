@@ -18,15 +18,16 @@ yarn add @viict/node-nitgen-enbsp
 const enbsp = require('@viict/node-nitgen-enbsp');
 const init = enbsp.init();
 
-if(init == true){
+let fir1, fir2;
+if(init === enbsp.NBioAPIERROR_NONE){
 	console.log("Insert the first fingerprint: ");
-	const fir1 = enbsp.capture(4000);
+	fir1 = enbsp.capture(4000);
 
 	console.log("Insert the second fingerprint: ");
-	const fir2 = enbsp.capture(4000);
+	fir2 = enbsp.capture(4000);
 }
 
-console.log(`Match: `, enbsp.match(fir1, fir2));
+console.log(`Match: `, enbsp.match(fir1, fir2) === true);
 enbsp.close()
 ```
 
@@ -45,16 +46,19 @@ yarn test
 const enbsp = require('./index.js');
 const init = enbsp.init();
 
-if(init == true){
+let fir1, fir2;
+if(init == enbsp.NBioAPIERROR_NONE){
 	console.log("Insert the first fingerprint: ");
-	const fir1 = enbsp.capture(4000);
+	fir1 = enbsp.capture(4000);
 
 	console.log("Insert the second fingerprint: ");
-	const fir2 = enbsp.capture(4000);
+	fir2 = enbsp.capture(4000);
 }
 
-console.log(`Match: `, enbsp.match(fir1, fir2));
+console.log(`Match: `, enbsp.match(fir1, fir2) === true);
 enbsp.close()
 ```
+
+> Check the test.js for more examples
 
 #### Any problem? Open a new issue
